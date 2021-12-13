@@ -17,7 +17,7 @@
       <span>Minicart ({{ totalQuantity }})</span>
     </div>
   </header>
-  <router-view :inventory="inventory" :addToCart="addToCart" />
+  <router-view v-if="dataReady" :inventory="inventory" :addToCart="addToCart" />
   <Sidebar
     v-if="showSidebar"
     :toggle="toggleSidebar"
@@ -27,15 +27,21 @@
 </template>
 
 <script>
-import food from '@/food.json'
 import Sidebar from './components/Sidebar'
 export default {
   data () {
     return {
+      dataReady: false,
       showSidebar: false,
-      inventory: food,
+      inventory: {},
       cart: {}
     }
+  },
+  async mounted () {
+    const data = await (await fetch('https://GranjaFlask.mechell.repl.co/products')).json()
+    this.inventory = data
+    this.dataReady = true
+    console.log(data)
   },
   computed: {
     totalQuantity () {

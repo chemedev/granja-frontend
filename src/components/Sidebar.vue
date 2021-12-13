@@ -27,7 +27,7 @@
               <td>{{ key }}</td>
               <td>$ {{ getPrice(key) }}</td>
               <td class="center">{{ quantity }}</td>
-              <td>${{ (quantity * getPrice(key)).toFixed(2) }}</td>
+              <td>${{ quantity * 1 }}</td>
               <td class="center">
                 <button
                   @click="removeItem(key)"
@@ -45,7 +45,7 @@
         </p>
         <div class="spread">
           <span><strong>Total:</strong> $ {{ calculateTotal() }}</span>
-          <button class="btn btn-light">
+          <button @click="confirmOrder" class="btn btn-light">
             Confirmar Pedido
           </button>
         </div>
@@ -59,19 +59,42 @@ export default {
   props: ['toggle', 'cart', 'inventory'],
   methods: {
     getPrice (name) {
-      const prod = this.inventory.find((p) => p.name === name)
-      return +prod.price.USD
+      const prod = this.inventory.find((p) => p.description === name)
+      return +prod.price
     },
     calculateTotal () {
       const cartEntries = Object.entries(this.cart)
       const total = cartEntries.reduce((tot, p) => {
         return tot + p[1] * +this.getPrice(p[0])
       }, 0)
-
       return total.toFixed(2)
     },
     removeItem (name) {
       delete this.cart[name]
+    },
+    confirmOrder () {
+      const products = []
+      Object.entries(this.cart).forEach(prod => {
+        const p = this.inventory.find(p => p.description === prod[0])
+        p.quantity = prod[1]
+        products.push(p)
+      })
+      const data = {
+        products,
+        total: +this.calculateTotal()
+      }
+
+      const options = {
+        body: JSON.stringify(data),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+
+      fetch('https://GranjaFlask.mechell.repl.co/orders', options)
+        .then(res => res.json())
+        .then(data => console.log(data))
     }
   }
 }
